@@ -462,11 +462,11 @@
 </main>
 
 <script>
-const CHAVE_GEMINI = "AQ.Ab8RN6IrYZmh3iHr0HKK7K0g_vfgYKauqO_bBxA8DQY1iOp-Uw";
+const CHAVE_GEMINI = "AQ.Ab8RN6IeJ8YIqBY3eiabXt_WUZtTb12SHqTuG4Hl6G8VA7C5LQ";
 const MODELO_IMAGEM = "gemini-2.5-flash";
 const ENDPOINT_GEMINI = `https://generativelanguage.googleapis.com/v1beta/models/${MODELO_IMAGEM}:generateContent?key=${CHAVE_GEMINI}`;
 
-const MODELO_NVIDIA = "meta/llama-3.1-70b-instruct";
+const MODELO_NVIDIA = "meta/llama-3.2-11b-vision-instruct";
 const NVIDIA_PROXY_URL = location.hostname === 'localhost' ? 'http://localhost:8888/.netlify/functions/nvidia-proxy' : '/.netlify/functions/nvidia-proxy';
 
 const PROMPT_SISTEMA = `Você é MedIA, uma assistente de acolhimento e triagem de sintomas antes de avaliação médica presencial.
