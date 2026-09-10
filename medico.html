@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedIA — Painel médico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg: #0A1512;
+    --bg-raised: #0F1F1A;
+    --ink: #E8EDF1;
+    --ink-dim: #93A3AF;
+    --line: #1E322B;
+    --turquesa: #3FC2B0;
+    --turquesa-dim: #256B62;
+    --turquesa-bg: #102420;
+    --amber: #D9A441;
+    --amber-bg: #2E2A18;
+    --terracotta: #C4573E;
+    --terracotta-bg: #2E1B16;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+  }
+  header {
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.3rem;
+    margin: 0;
+  }
+  header button {
+    background: transparent;
+    border: 1px solid var(--turquesa-dim);
+    color: var(--turquesa);
+    padding: 8px 14px;
+    border-radius: 18px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 28px;
+  }
+  .overlay-login {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cartao-login {
+    max-width: 380px;
+    width: 100%;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 28px;
+  }
+  .cartao-login h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    margin: 0 0 18px;
+  }
+  .cartao-login input {
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.94rem;
+    padding: 11px 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--ink);
+    margin-bottom: 12px;
+  }
+  .cartao-login button {
+    width: 100%;
+    background: var(--turquesa);
+    color: #0F1B1A;
+    border: none;
+    padding: 12px 0;
+    border-radius: 22px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  #erro-login {
+    color: #E0836E;
+    font-size: 0.82rem;
+    margin: -6px 0 12px;
+    display: none;
+  }
+  .paciente {
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-left-width: 4px;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+  }
+  .paciente.alta { border-left-color: var(--terracotta); }
+  .paciente.media { border-left-color: var(--amber); }
+  .paciente.saude_mental { border-left-color: var(--amber); }
+  .paciente.baixa { border-left-color: var(--turquesa); }
+  .paciente-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .tag {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .paciente.alta .tag { background: var(--terracotta-bg); color: #F0B3A3; }
+  .paciente.media .tag, .paciente.saude_mental .tag { background: var(--amber-bg); color: #E8C77A; }
+  .paciente.baixa .tag { background: var(--turquesa-bg); color: var(--turquesa); }
+  .paciente-hora { font-size: 0.78rem; color: var(--ink-dim); }
+  .linha { font-size: 0.92rem; margin-bottom: 5px; line-height: 1.5; }
+  .linha strong { color: var(--ink-dim); font-weight: 500; }
+  .acoes { margin-top: 12px; display: flex; gap: 8px; }
+  .acoes button {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+    background: transparent;
+    border: 1px solid var(--turquesa-dim);
+    color: var(--turquesa);
+    padding: 7px 12px;
+    border-radius: 16px;
+    cursor: pointer;
+  }
+  .vazio { color: var(--ink-dim); font-size: 0.92rem; text-align: center; padding: 40px 0; }
+</style>
+</head>
+<body>
+
+<div class="overlay-login" id="tela-login">
+  <div class="cartao-login">
+    <h2>Painel médico</h2>
+    <input type="email" id="campo-email" placeholder="E-mail" autocomplete="email">
+    <input type="password" id="campo-senha" placeholder="Senha" autocomplete="current-password">
+    <div id="erro-login"></div>
+    <button onclick="entrar()">Entrar</button>
+  </div>
+</div>
+
+<header>
+  <h1>MedIA — Fila de triagem</h1>
+  <button onclick="sair()">Sair</button>
+</header>
+
+<main>
+  <div id="lista"></div>
+</main>
+
+<script>
+const SUPABASE_URL = 'https://SEU-PROJETO.supabase.co';
+const SUPABASE_ANON_KEY = 'SUA_ANON_KEY_PUBLICA';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const ORDEM_URGENCIA = { alta: 0, saude_mental: 1, media: 2, baixa: 3 };
+const LABEL_URGENCIA = {
+  alta: 'Alta prioridade',
+  media: 'Prioridade média',
+  baixa: 'Prioridade baixa',
+  saude_mental: 'Encaminhamento — saúde mental'
+};
+
+let canal = null;
+
+async function entrar() {
+  const email = document.getElementById('campo-email').value.trim();
+  const senha = document.getElementById('campo-senha').value;
+  const erro = document.getElementById('erro-login');
+
+  const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+  if (error) {
+    erro.textContent = error.message;
+    erro.style.display = 'block';
+    return;
+  }
+
+  erro.style.display = 'none';
+  document.getElementById('tela-login').remove();
+  carregarFila();
+  assinarAtualizacoes();
+}
+
+async function sair() {
+  await supabase.auth.signOut();
+  location.reload();
+}
+
+async function carregarFila() {
+  const { data, error } = await supabase
+    .from('triagens')
+    .select('*')
+    .neq('status', 'concluido')
+    .order('criado_em', { ascending: true });
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  data.sort((a, b) => ORDEM_URGENCIA[a.urgencia] - ORDEM_URGENCIA[b.urgencia]);
+  renderizarFila(data);
+}
+
+function assinarAtualizacoes() {
+  canal = supabase
+    .channel('triagens-realtime')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'triagens' }, carregarFila)
+    .subscribe();
+}
+
+function escapeHTML(texto) {
+  const div = document.createElement('div');
+  div.textContent = texto == null ? '' : String(texto);
+  return div.innerHTML;
+}
+
+function formatarHora(iso) {
+  const data = new Date(iso);
+  return data.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+function renderizarFila(pacientes) {
+  const lista = document.getElementById('lista');
+  lista.innerHTML = '';
+
+  if (!pacientes.length) {
+    lista.innerHTML = '<div class="vazio">Nenhum paciente aguardando.</div>';
+    return;
+  }
+
+  pacientes.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'paciente ' + (p.urgencia || 'baixa');
+    div.innerHTML = `
+      <div class="paciente-topo">
+        <span class="tag">${escapeHTML(LABEL_URGENCIA[p.urgencia] || p.urgencia)}</span>
+        <span class="paciente-hora">${formatarHora(p.criado_em)}</span>
+      </div>
+      ${p.nome ? `<div class="linha"><strong>Paciente:</strong> ${escapeHTML(p.nome)}</div>` : ''}
+      ${p.idade ? `<div class="linha"><strong>Idade:</strong> ${escapeHTML(p.idade)}</div>` : ''}
+      ${p.sexo ? `<div class="linha"><strong>Sexo:</strong> ${escapeHTML(p.sexo)}</div>` : ''}
+      <div class="linha"><strong>Queixa:</strong> ${escapeHTML(p.queixa || '-')}</div>
+      <div class="linha"><strong>Início:</strong> ${escapeHTML(p.duracao || '-')}</div>
+      <div class="linha"><strong>Intensidade relatada:</strong> ${escapeHTML(p.intensidade || '-')}</div>
+      ${p.sintomas_adicionais ? `<div class="linha"><strong>Sintomas adicionais:</strong> ${escapeHTML(p.sintomas_adicionais)}</div>` : ''}
+      ${p.alergias ? `<div class="linha"><strong>Alergias:</strong> ${escapeHTML(p.alergias)}</div>` : ''}
+      ${p.medicamentos_relatados ? `<div class="linha"><strong>Medicamentos relatados:</strong> ${escapeHTML(p.medicamentos_relatados)}</div>` : ''}
+      ${p.observacoes ? `<div class="linha"><strong>Observações:</strong> ${escapeHTML(p.observacoes)}</div>` : ''}
+      <div class="acoes">
+        ${p.status !== 'em_atendimento' ? `<button onclick="mudarStatus('${p.id}', 'em_atendimento')">Iniciar atendimento</button>` : ''}
+        <button onclick="mudarStatus('${p.id}', 'concluido')">Concluir</button>
+      </div>`;
+    lista.appendChild(div);
+  });
+}
+
+async function mudarStatus(id, status) {
+  const { error } = await supabase.from('triagens').update({ status }).eq('id', id);
+  if (error) console.error(error);
+}
+</script>
+
+</body>
+</html>
