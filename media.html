@@ -619,7 +619,7 @@ async function chamarIA(instrucaoUsuario, imagemData = null) {
       if (!resposta.ok) throw new Error(`Gemini HTTP ${resposta.status}`);
     } else {
       provedor = 'nvidia';
-      resposta = await comTimeout(chamarNvidia(), 15000);
+      resposta = await comTimeout(chamarNvidia(), 30000);
     }
 
     const dados = await resposta.json().catch(() => ({}));
