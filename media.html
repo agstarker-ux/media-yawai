@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedIA by YawAI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A1512;
+    --bg-raised: #0F1F1A;
+    --ink: #E8EDF1;
+    --ink-dim: #93A3AF;
+    --line: #1E322B;
+    --verde: #45A66B;
+    --azul: #3D84BC;
+    --ciano: #2FB8C6;
+    --turquesa: #3FC2B0;
+    --turquesa-dim: #256B62;
+    --turquesa-bg: #102420;
+    --amber: #D9A441;
+    --amber-bg: #2E2A18;
+    --terracotta: #C4573E;
+    --terracotta-bg: #2E1B16;
+    --marca-gradiente: linear-gradient(90deg, var(--verde), var(--azul) 45%, var(--ciano) 75%, var(--turquesa));
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  header {
+    padding: 22px 28px 18px;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+    position: relative;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--marca-gradiente);
+  }
+  header .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .marca-icone {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--turquesa-bg);
+    border: 1px solid var(--turquesa-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--turquesa);
+    flex-shrink: 0;
+  }
+  header h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.35rem;
+    margin: 0;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+  .brand-by {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--turquesa-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: 620px;
+    width: 100%;
+    margin: 0 auto;
+    min-height: 0;
+  }
+  #mensagens {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 0;
+  }
+  #mensagens::-webkit-scrollbar { width: 6px; }
+  #mensagens::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+  .linha {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    animation: subir 0.25s ease;
+  }
+  @keyframes subir {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .linha.user { flex-direction: row-reverse; }
+  .avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--turquesa-bg);
+    border: 1px solid var(--turquesa-dim);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--turquesa);
+  }
+  .msg {
+    max-width: 74%;
+    padding: 11px 15px;
+    border-radius: 14px;
+    font-size: 0.96rem;
+    line-height: 1.5;
+  }
+  .msg.bot {
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-bottom-left-radius: 3px;
+  }
+  .msg.user {
+    background: var(--turquesa-dim);
+    color: #F2F7F4;
+    border-bottom-right-radius: 3px;
+  }
+  .msg.resultado {
+    max-width: 100%;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-left-width: 3px;
+    border-radius: 10px;
+  }
+  .msg.resultado.alta { border-left-color: var(--terracotta); }
+  .msg.resultado.media { border-left-color: var(--amber); }
+  .msg.resultado.baixa { border-left-color: var(--turquesa); }
+  .msg.resultado .tag {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+  }
+  .msg.resultado.alta .tag { background: var(--terracotta-bg); color: #F0B3A3; }
+  .msg.resultado.media .tag { background: var(--amber-bg); color: #E8C77A; }
+  .msg.resultado.baixa .tag { background: var(--turquesa-bg); color: var(--turquesa); }
+  .resumo-titulo {
+    font-size: 0.78rem;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 10px 0 8px;
+  }
+  .resumo-linha {
+    font-size: 0.92rem;
+    margin-bottom: 5px;
+    line-height: 1.5;
+  }
+  .resumo-linha strong { color: var(--ink-dim); font-weight: 500; }
+  .digitando { display: flex; gap: 4px; padding: 13px 15px; }
+  .digitando span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ink-dim);
+    animation: piscar 1.2s infinite;
+  }
+  .digitando span:nth-child(2) { animation-delay: 0.2s; }
+  .digitando span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes piscar {
+    0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+    30% { opacity: 1; transform: translateY(-2px); }
+  }
+  #opcoes {
+    padding: 0 24px 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  #opcoes button {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.88rem;
+    background: transparent;
+    border: 1px solid var(--turquesa-dim);
+    color: var(--turquesa);
+    padding: 9px 15px;
+    border-radius: 18px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  #opcoes button:hover { background: var(--turquesa-bg); border-color: var(--turquesa); }
+  #entrada {
+    display: flex;
+    gap: 8px;
+    padding: 14px 24px;
+    border-top: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  #entrada input[type="text"] {
+    flex: 1;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.96rem;
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    background: var(--bg-raised);
+    color: var(--ink);
+  }
+  #entrada input[type="text"]:focus { outline: none; border-color: var(--turquesa-dim); }
+  #entrada input[type="text"]::placeholder { color: var(--ink-dim); }
+  #entrada input[type="file"] { display: none; }
+  .botao-imagem {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    border: 1px solid var(--turquesa-dim);
+    border-radius: 22px;
+    color: var(--turquesa);
+    cursor: pointer;
+    flex-shrink: 0;
+    background: transparent;
+    transition: background 0.15s ease;
+  }
+  .botao-imagem:hover { background: var(--turquesa-bg); }
+  #nome-imagem {
+    display: none;
+    max-width: 120px;
+    overflow: hidden;
+    color: var(--ink-dim);
+    font-size: 0.72rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    align-self: center;
+  }
+  #entrada button[onclick] {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: var(--turquesa);
+    color: #0F1B1A;
+    border: none;
+    padding: 0 20px;
+    border-radius: 22px;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+  #entrada button[onclick]:hover { opacity: 0.88; }
+  .overlay-consentimento {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow-y: auto;
+  }
+  .cartao-consentimento {
+    max-width: 460px;
+    width: 100%;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 28px;
+  }
+  .cartao-consentimento h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.25rem;
+    margin: 0 0 6px;
+  }
+  .cartao-consentimento .subtitulo {
+    font-size: 0.88rem;
+    color: var(--ink-dim);
+    line-height: 1.5;
+    margin: 0 0 20px;
+  }
+  .campo-grupo { margin-bottom: 14px; }
+  .campo-grupo label {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--ink-dim);
+    margin-bottom: 6px;
+  }
+  .campo-grupo input[type="text"],
+  .campo-grupo input[type="email"] {
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.94rem;
+    padding: 11px 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  .campo-grupo input:focus { outline: none; border-color: var(--turquesa-dim); }
+  details.politica-privacidade {
+    margin: 14px 0 18px;
+    font-size: 0.85rem;
+    color: var(--ink-dim);
+    line-height: 1.6;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 14px;
+    background: var(--bg);
+  }
+  details.politica-privacidade summary {
+    cursor: pointer;
+    color: var(--turquesa);
+    font-weight: 500;
+    list-style: none;
+  }
+  details.politica-privacidade p { margin: 10px 0; }
+  .campo-consentimento {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.86rem;
+    color: var(--ink);
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+  .campo-consentimento input[type="checkbox"] {
+    margin-top: 3px;
+    accent-color: var(--turquesa);
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+  #erro-consentimento {
+    color: #E0836E;
+    font-size: 0.82rem;
+    margin: -8px 0 14px;
+    display: none;
+  }
+  .botao-consentimento {
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.96rem;
+    font-weight: 600;
+    background: var(--turquesa);
+    color: #0F1B1A;
+    border: none;
+    padding: 13px 0;
+    border-radius: 22px;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+  .botao-consentimento:hover { opacity: 0.88; }
+  .botao-consentimento:disabled { opacity: 0.4; cursor: not-allowed; }
+  .disclaimer {
+    font-size: 0.72rem;
+    color: var(--ink-dim);
+    padding: 0 24px 16px;
+    flex-shrink: 0;
+    line-height: 1.5;
+  }
+  .assinatura {
+    margin: 0;
+    padding: 0 24px 16px;
+    flex-shrink: 0;
+    text-align: center;
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    color: var(--ink-dim);
+  }
+</style>
+</head>
+<body>
+
+<div class="overlay-consentimento" id="tela-consentimento">
+  <div class="cartao-consentimento">
+    <h2>Antes de começarmos</h2>
+    <p class="subtitulo">O MedIA organiza o que você relatar para apoiar a avaliação de um profissional de saúde. Ele não diagnostica nem substitui atendimento médico. Em emergência, ligue para o SAMU (192).</p>
+
+    <div class="campo-grupo">
+      <label for="campo-nome">Nome completo</label>
+      <input type="text" id="campo-nome" autocomplete="name" placeholder="Seu nome">
+    </div>
+    <div class="campo-grupo">
+      <label for="campo-email">E-mail (opcional, para contato sobre seu atendimento)</label>
+      <input type="email" id="campo-email" autocomplete="email" placeholder="seuemail@exemplo.com">
+    </div>
+
+    <details class="politica-privacidade">
+      <summary>Ver política de privacidade</summary>
+      <p><strong>O que coletamos:</strong> nome, idade, sexo, sintomas e histórico relatados por você, e-mail (se informado) e, caso você envie, uma imagem relacionada ao sintoma.</p>
+      <p><strong>Por que coletamos:</strong> para organizar essas informações em um resumo estruturado que apoia a avaliação de um profissional de saúde.</p>
+      <p><strong>Como usamos:</strong> os dados são tratados apenas para essa finalidade — não são usados para marketing nem compartilhados com terceiros fora do fluxo de avaliação da sua saúde.</p>
+      <p><strong>Seus direitos (LGPD):</strong> você pode solicitar acesso, correção ou exclusão dos seus dados a qualquer momento pelo e-mail de contato informado no rodapé do serviço.</p>
+      <p><strong>Emergência:</strong> se você estiver em risco imediato, ligue para o SAMU (192) ou vá ao serviço de emergência mais próximo — não espere pelo atendimento por aqui.</p>
+    </details>
+
+    <label class="campo-consentimento">
+      <input type="checkbox" id="campo-aceite">
+      <span>Li e concordo com a política de privacidade e entendo que esta ferramenta não substitui atendimento médico presencial.</span>
+    </label>
+
+    <div id="erro-consentimento">Preencha seu nome e aceite a política de privacidade para continuar.</div>
+
+    <button class="botao-consentimento" onclick="confirmarConsentimento()">Continuar</button>
+  </div>
+</div>
+
+<header>
+  <div class="brand">
+    <div class="marca-icone">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="2" width="14" height="10" rx="4"/>
+        <circle cx="9" cy="6" r="1" fill="currentColor" stroke="none"/>
+        <circle cx="15" cy="6" r="1" fill="currentColor" stroke="none"/>
+        <path d="M9 9.5 Q12 11.5 15 9.5"/>
+        <path d="M12 12 L12 15"/>
+        <path d="M9 15 Q9 18 12 18 Q15 18 15 15"/>
+        <path d="M7 15 L9 15"/>
+        <path d="M15 15 L17 15"/>
+      </svg>
+    </div>
+    <div>
+      <h1>MedIA</h1>
+      <div class="brand-by">by YawAI</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="mensagens"></div>
+  <div id="opcoes"></div>
+  <div id="entrada">
+    <label class="botao-imagem" for="campo-imagem" title="Enviar imagem" aria-label="Enviar imagem">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-4.5-4.5L8 19"/></svg>
+    </label>
+    <input type="file" id="campo-imagem" accept="image/jpeg,image/png,image/webp" onchange="selecionarImagem(event)">
+    <span id="nome-imagem"></span>
+    <input type="text" id="campo-texto" placeholder="Digite sua resposta..." onkeydown="if(event.key==='Enter') enviarTexto()">
+    <button onclick="enviarTexto()">Enviar</button>
+  </div>
+  <p class="disclaimer">Este chat organiza suas informações para apoiar um profissional de saúde. Não substitui avaliação médica. Em emergência, ligue para o SAMU (192).</p>
+  <p class="assinatura">YawAI</p>
+</main>
+
+<script>
+const CHAVE_GEMINI = "AQ.Ab8RN6IrYZmh3iHr0HKK7K0g_vfgYKauqO_bBxA8DQY1iOp-Uw";
+const MODELO_IMAGEM = "gemini-2.5-flash";
+const ENDPOINT_GEMINI = `https://generativelanguage.googleapis.com/v1beta/models/${MODELO_IMAGEM}:generateContent?key=${CHAVE_GEMINI}`;
+
+const MODELO_NVIDIA = "meta/llama-3.1-70b-instruct";
+const NVIDIA_PROXY_URL = location.hostname === 'localhost' ? 'http://localhost:8888/.netlify/functions/nvidia-proxy' : '/.netlify/functions/nvidia-proxy';
+
+const PROMPT_SISTEMA = `Você é MedIA, uma assistente de acolhimento e triagem de sintomas antes de avaliação médica presencial.
+
+IDENTIDADE
+Você é MedIA, e seu papel é ser a primeira pessoa acolhedora que alguém encontra quando está preocupado com a própria saúde. Converse de forma humana, genuinamente atenta, e colete as informações clínicas relevantes relatadas pelo usuário para gerar um resumo fiel para encaminhamento ao profissional de saúde. Você não realiza consulta, não confirma diagnósticos e não substitui atendimento médico — mas isso não significa ser fria ou robótica: significa cuidar bem dentro do seu papel.
+
+ABERTURA
+O nome da pessoa já foi informado no cadastro de consentimento e chegará para você na primeira mensagem do sistema. Cumprimente por esse nome com calor genuíno desde a primeira frase — por exemplo: "Oi, [nome]! Que bom te ver por aqui. Pode me contar o que você está sentindo?" Nunca peça o nome de novo, ele já foi coletado. Depois de acolher o relato inicial, pergunte idade e sexo antes de avançar para os detalhes dos sintomas. Use o nome na abertura e, no máximo, uma vez no encerramento ou em uma situação emocional importante. Não use o nome nas mensagens intermediárias de rotina.
+
+CONDUTA NA CONVERSA
+Fale em português do Brasil com linguagem natural, simples e acolhedora — como alguém atencioso conversaria, nunca como um formulário disfarçado de chat.
+Reconheça brevemente e com empatia real o que a pessoa disse antes de fazer uma nova pergunta, sem usar sempre a mesma fórmula.
+Faça apenas uma pergunta principal por mensagem, mas responda primeiro ao que a pessoa acabou de dizer quando isso for necessário.
+Use todo o contexto da conversa. Não repita perguntas nem peça novamente informações que o usuário já forneceu, mesmo que estejam em outra mensagem.
+Não invente fatos clínicos. Você pode organizar, resumir e relacionar explicitamente informações que o usuário forneceu, mas não transforme uma possibilidade em diagnóstico.
+Se o usuário não souber responder, registre "não informado" e avance sem insistir. Se o usuário negar algo claramente, registre a negativa: "não tenho alergias" significa "nega alergias" e "não uso medicamentos" significa "não usa medicamentos"; não classifique isso como "não informado".
+Não solicite CPF, endereço, documentos ou dados pessoais desnecessários.
+
+USO DE OPÇÕES (campo "opcoes")
+Ofereça opções clicáveis apenas quando a pergunta tiver respostas previsíveis e limitadas. Exemplos corretos: "A dor é constante ou em crises?" → ["Constante", "Em crises", "Às vezes constante, às vezes em crises"]. "A dor piora com alguma coisa?" → ["Com movimento", "Após comer", "Ao respirar fundo", "Não percebi nada"].
+Deixe opcoes como null quando a resposta for aberta, descritiva ou imprevisível — como ao descrever sintomas, contar a história da queixa ou responder perguntas emocionais.
+
+CONDUÇÃO DA ANAMNESE
+Conduza uma conversa gradual, semelhante a uma anamnese profissional, normalmente com várias rodadas de perguntas e respostas. Não tente concluir depois de apenas duas ou três mensagens quando ainda houver lacunas relevantes. Explore a queixa atual em ordem natural: motivo da consulta, início e evolução, localização e características, intensidade, fatores de melhora ou piora, sintomas associados, sinais de alerta, antecedentes, cirurgias, alergias, medicamentos e contexto relevante.
+Faça perguntas de seguimento específicas com base no que foi respondido. Evite perguntas genéricas, listas longas e perguntas sobre dados já informados. A conversa pode ser longa, mas cada mensagem deve conter apenas uma pergunta principal e deve acrescentar valor.
+Conclua quando as informações essenciais estiverem bem esclarecidas e houver um resumo útil para avaliação profissional, ou imediatamente se houver emergência. Se o usuário não souber responder a três perguntas consecutivas, encerre a coleta com o que foi reunido.
+
+LIMITES CLÍNICOS
+Você organiza sintomas relatados e sinaliza a necessidade de avaliação profissional.
+Não diagnostique, não confirme doenças, não prescreva medicamentos, não sugira doses, não altere tratamentos e não interprete exames como conclusão clínica.
+Ao encerrar a coleta, use linguagem como "isso foi relatado por você e precisa ser avaliado por um profissional".
+
+ENCERRAMENTO HUMANIZADO
+Ao gerar o resumo_final, a mensagem ao usuário deve: confirmar que o resumo foi registrado, informar a prioridade de forma clara e tranquilizadora (sem minimizar), orientar o próximo passo (aguardar atendimento, procurar UPA/SAMU conforme urgência) e se despedir pelo nome do paciente. Exemplo para urgência baixa: "Pronto, [nome]! Suas informações foram registradas e encaminhadas para avaliação médica. Em caso de piora antes do atendimento, não hesite em ligar para o SAMU (192). Cuide-se!"
+
+EMERGÊNCIA FÍSICA
+Se o usuário relatar dor intensa no peito, falta de ar grave, desmaio, convulsão, sangramento intenso, sinais súbitos de AVC, reação alérgica grave, confusão mental súbita ou situação equivalente:
+- Interrompa imediatamente a coleta.
+- Classifique urgencia como "alta".
+- Informe que os sinais relatados exigem atendimento imediato.
+- Oriente ligar para o SAMU (192) ou ir ao serviço de emergência mais próximo.
+- Não tranquilize nem minimize.
+- Gere o resumo de encaminhamento imediatamente.
+
+SAÚDE MENTAL
+Se houver relato de desesperança, pensamentos de morte, autoagressão ou frases como "não aguento mais":
+- Trate como categoria própria, distinta de sintomas físicos.
+- Acolha sem minimizar ou comparar.
+- Avalie risco imediato com uma pergunta por vez, sem pressão.
+- Oriente o CVV (188); em risco imediato, oriente também o SAMU (192).
+- Use urgencia "saude_mental" para sofrimento sem risco físico imediato, ou "alta" se houver risco imediato.
+- Não reduza sofrimento emocional a escala de dor física.
+
+DADOS A COLETAR
+Colete progressivamente, sem roteiro rígido e sem transformar a conversa em checklist. Priorize a informação mais importante para a próxima decisão e confirme os dados essenciais antes do resumo: nome, idade, sexo, queixa principal, localização, início, duração, evolução, intensidade relatada (0–10 se aplicável), fatores que melhoram ou pioram, sintomas associados, sinais de alerta, histórico de doenças prévias, cirurgias, alergias, medicamentos em uso e orientações já recebidas de profissional.
+Adapte a próxima pergunta à resposta anterior. Se a pessoa trouxer várias informações de uma vez, reconheça o que foi dito, aproveite tudo e pergunte somente pelo dado mais relevante que ainda estiver faltando.
+
+IMAGEM
+Se receber imagem, descreva apenas características visíveis de forma objetiva. Não identifique doenças, lesões nem interprete resultados de exame. Informe que a imagem será encaminhada para avaliação profissional e não substitui exame presencial.
+
+CLASSIFICAÇÃO DE URGÊNCIA
+"alta": sinais de emergência ou risco de vida imediato.
+"saude_mental": sofrimento emocional relevante sem risco físico imediato claro.
+"media": necessita avaliação profissional em prazo oportuno.
+"baixa": sem sinal de emergência relatado, mas o resumo ainda deve ser avaliado.
+Não eleve a urgência sem base no relato. Em dúvida genuína, prefira a categoria mais segura.
+
+FORMATO DE SAÍDA
+Responda sempre com JSON válido, sem Markdown e sem texto fora do JSON.
+
+Enquanto estiver coletando:
+{"tipo":"pergunta","mensagem":"reconhecimento breve e uma pergunta objetiva","opcoes":["opção A","opção B"] ou null,"urgencia":null,"resumo":null,"orientacao_medica":null}
+
+Ao concluir ou diante de emergência:
+{"tipo":"resumo_final","mensagem":"despedida humanizada com nome do paciente, confirmação do registro, orientação do próximo passo e lembrete do SAMU se aplicável","opcoes":null,"urgencia":"alta" ou "media" ou "baixa" ou "saude_mental","resumo":{"nome":"...","idade":"...","sexo":"...","queixa":"...","duracao":"...","intensidade":"...","observacoes":"...","sintomas_adicionais":"...","alergias":"...","medicamentos_relatados":"..."},"orientacao_medica":null}
+
+Use "não informado" nos campos sem dado. O resumo registra o relato do usuário; não é diagnóstico.`;
+
+let historico = [{ role: 'system', content: PROMPT_SISTEMA }];
+let aguardandoResposta = false;
+let imagemSelecionada = null;
+let identidadeUsuario = { nome: '', email: '' };
+
+const ICONE_ROBO = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="5" y="2" width="14" height="10" rx="4"/>
+  <circle cx="9" cy="6" r="1" fill="currentColor" stroke="none"/>
+  <circle cx="15" cy="6" r="1" fill="currentColor" stroke="none"/>
+  <path d="M9 9.5 Q12 11.5 15 9.5"/>
+  <path d="M12 12 L12 15"/>
+  <path d="M9 15 Q9 18 12 18 Q15 18 15 15"/>
+  <path d="M7 15 L9 15"/>
+  <path d="M15 15 L17 15"/>
+</svg>`;
+
+const LABEL_URGENCIA = {
+  alta: 'Alta prioridade',
+  media: 'Prioridade média',
+  baixa: 'Prioridade baixa',
+  saude_mental: 'Encaminhamento — saúde mental'
+};
+
+function confirmarConsentimento() {
+  const nome = document.getElementById('campo-nome').value.trim();
+  const email = document.getElementById('campo-email').value.trim();
+  const aceite = document.getElementById('campo-aceite').checked;
+  const erro = document.getElementById('erro-consentimento');
+
+  if (!nome || !aceite) {
+    erro.style.display = 'block';
+    return;
+  }
+  erro.style.display = 'none';
+
+  identidadeUsuario = { nome, email };
+  document.getElementById('tela-consentimento').remove();
+  iniciarChat();
+}
+
+function iniciarChat() {
+  historico = [{ role: 'system', content: PROMPT_SISTEMA }];
+  document.getElementById('mensagens').innerHTML = '';
+  document.getElementById('opcoes').innerHTML = '';
+  imagemSelecionada = null;
+  document.getElementById('campo-imagem').value = '';
+  document.getElementById('nome-imagem').style.display = 'none';
+
+  const infoIdentidade = `Consentimento e política de privacidade já aceitos pelo usuário. Nome informado no cadastro: ${identidadeUsuario.nome}.${identidadeUsuario.email ? ' E-mail para contato: ' + identidadeUsuario.email + '.' : ''} Cumprimente a pessoa pelo nome e pergunte o que ela está sentindo.`;
+
+  chamarIA(infoIdentidade);
+}
+
+async function chamarIA(instrucaoUsuario, imagemData = null) {
+  if (instrucaoUsuario || imagemData) {
+    const conteudoHistorico = imagemData
+      ? `${instrucaoUsuario || ''} [imagem anexada]`.trim()
+      : instrucaoUsuario;
+    historico.push({ role: 'user', content: conteudoHistorico });
+  }
+
+  aguardandoResposta = true;
+  mostrarDigitando();
+
+  try {
+    let provedor = 'gemini';
+    let resposta;
+
+    if (imagemData) {
+      resposta = await chamarGemini(instrucaoUsuario, imagemData);
+    } else {
+      try {
+        resposta = await comTimeout(chamarGeminiTexto(), 15000);
+        if (!resposta.ok) throw new Error(`Gemini HTTP ${resposta.status}`);
+      } catch (erroGemini) {
+        console.warn('MedIA: Gemini indisponível, usando NVIDIA como reserva.', erroGemini);
+        provedor = 'nvidia';
+        resposta = await comTimeout(chamarNvidia(), 15000);
+      }
+    }
+
+    const dados = await resposta.json().catch(() => ({}));
+
+    if (!resposta.ok) {
+      const detalhe = dados.error?.message || dados.message || `HTTP ${resposta.status}`;
+      throw new Error(detalhe);
+    }
+
+    const textoResposta = provedor === 'nvidia'
+      ? dados.choices?.[0]?.message?.content?.trim()
+      : dados.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim();
+
+    if (!textoResposta) throw new Error('A API não retornou uma resposta válida.');
+
+    historico.push({ role: 'assistant', content: textoResposta });
+    const json = JSON.parse(textoResposta.replace(/^```(?:json)?\s*|\s*```$/g, '').trim());
+    removerDigitando();
+    processarResposta(json);
+
+  } catch (erro) {
+    removerDigitando();
+    adicionarMensagem('Não consegui me conectar agora. ' + erro.message, 'bot');
+    console.error('YawAI:', erro);
+  } finally {
+    aguardandoResposta = false;
+  }
+}
+
+function obterChave() {
+  return CHAVE_GEMINI;
+}
+
+function comTimeout(promessa, milissegundos) {
+  return Promise.race([
+    promessa,
+    new Promise((_, rejeitar) => setTimeout(() => rejeitar(new Error('Tempo limite de resposta excedido.')), milissegundos))
+  ]);
+}
+
+function chamarGeminiTexto() {
+  const chave = obterChave();
+  if (!chave) throw new Error('Chave Google Gemini não configurada.');
+  const contents = historico
+    .filter(m => m.role !== 'system')
+    .map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }));
+
+  return fetch(ENDPOINT_GEMINI, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: PROMPT_SISTEMA }] },
+      contents,
+      generationConfig: { temperature: 0.6, responseMimeType: 'application/json' }
+    })
+  });
+}
+
+function chamarNvidia() {
+  const mensagens = historico.map(m => ({
+    role: m.role,
+    content: Array.isArray(m.content) ? m.content.filter(p => p.type === 'text').map(p => p.text).join(' ') : m.content
+  }));
+
+  return fetch(NVIDIA_PROXY_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: MODELO_NVIDIA,
+      messages: mensagens,
+      temperature: 0.3
+    })
+  });
+}
+
+function chamarGemini(instrucaoUsuario, imagemData) {
+  const chave = obterChave();
+  if (!chave) throw new Error('Chave Google Gemini não configurada para análise de imagens.');
+  const contents = historico
+    .filter(m => m.role !== 'system')
+    .map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: Array.isArray(m.content)
+        ? m.content.filter(p => p.type === 'text').map(p => ({ text: p.text }))
+        : [{ text: m.content }]
+    }));
+
+  const [tipoImagem, dadosImagem] = imagemData.split(',');
+  contents.push({
+    role: 'user',
+    parts: [
+      { text: instrucaoUsuario || 'Descreva o que é visualmente observável nesta imagem, sem diagnosticar.' },
+      { inlineData: { mimeType: tipoImagem.match(/data:(.*?);/)?.[1] || 'image/jpeg', data: dadosImagem } }
+    ]
+  });
+
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${MODELO_IMAGEM}:generateContent?key=${encodeURIComponent(chave)}`;
+
+  return fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: PROMPT_SISTEMA }] },
+      contents,
+      generationConfig: { temperature: 0.6, responseMimeType: 'application/json' }
+    })
+  });
+}
+
+function processarResposta(json) {
+  if (json.tipo === 'pergunta') {
+    adicionarMensagem(json.mensagem, 'bot');
+    renderOpcoes(json.opcoes);
+  } else if (json.tipo === 'resumo_final') {
+    mostrarResultado(json);
+  } else {
+    adicionarMensagem(json.mensagem || 'Não entendi a resposta.', 'bot');
+  }
+}
+
+function renderOpcoes(opcoes) {
+  const container = document.getElementById('opcoes');
+  const campo = document.getElementById('campo-texto');
+  container.innerHTML = '';
+
+  if (Array.isArray(opcoes) && opcoes.length > 0) {
+    campo.style.display = 'none';
+    opcoes.forEach(op => {
+      const btn = document.createElement('button');
+      btn.textContent = op;
+      btn.onclick = () => enviarResposta(op);
+      container.appendChild(btn);
+    });
+  } else {
+    campo.style.display = 'block';
+    campo.value = '';
+    campo.focus();
+  }
+}
+
+function enviarTexto() {
+  if (aguardandoResposta) return;
+  const campo = document.getElementById('campo-texto');
+  const valor = campo.value.trim();
+  if (!valor) return;
+  enviarResposta(valor, imagemSelecionada);
+}
+
+function enviarResposta(valor, imagemData = null) {
+  if (aguardandoResposta) return;
+  adicionarMensagem(valor, 'user');
+  document.getElementById('opcoes').innerHTML = '';
+  chamarIA(valor, imagemData);
+  imagemSelecionada = null;
+  document.getElementById('campo-imagem').value = '';
+  document.getElementById('nome-imagem').style.display = 'none';
+}
+
+function selecionarImagem(evento) {
+  const arquivo = evento.target.files[0];
+  if (!arquivo) return;
+  if (arquivo.size > 5 * 1024 * 1024) {
+    adicionarMensagem('Escolha uma imagem de até 5 MB.', 'bot');
+    evento.target.value = '';
+    return;
+  }
+  const leitor = new FileReader();
+  leitor.onload = () => {
+    imagemSelecionada = leitor.result;
+    const nome = document.getElementById('nome-imagem');
+    nome.textContent = arquivo.name;
+    nome.style.display = 'block';
+  };
+  leitor.readAsDataURL(arquivo);
+}
+
+function adicionarMensagem(texto, tipo) {
+  const container = document.getElementById('mensagens');
+  const linha = document.createElement('div');
+  linha.className = 'linha ' + tipo;
+  const avatar = tipo === 'bot' ? `<div class="avatar">${ICONE_ROBO}</div>` : '';
+  linha.innerHTML = `${avatar}<div class="msg ${tipo}"></div>`;
+  linha.querySelector('.msg').textContent = texto;
+  container.appendChild(linha);
+  container.scrollTop = container.scrollHeight;
+}
+
+function mostrarDigitando() {
+  const container = document.getElementById('mensagens');
+  const div = document.createElement('div');
+  div.className = 'linha bot';
+  div.id = 'indicador-digitando';
+  div.innerHTML = `<div class="avatar">${ICONE_ROBO}</div><div class="msg bot digitando"><span></span><span></span><span></span></div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removerDigitando() {
+  const el = document.getElementById('indicador-digitando');
+  if (el) el.remove();
+}
+
+function escapeHTML(texto) {
+  const div = document.createElement('div');
+  div.textContent = texto == null ? '' : String(texto);
+  return div.innerHTML;
+}
+
+function mostrarResultado(json) {
+  const urgencia = json.urgencia || 'baixa';
+  const resumo = json.resumo || {};
+  const container = document.getElementById('mensagens');
+
+  const linha = document.createElement('div');
+  linha.className = 'linha bot';
+  linha.innerHTML = `
+    <div class="avatar">${ICONE_ROBO}</div>
+    <div class="msg resultado ${urgencia === 'saude_mental' ? 'media' : urgencia}">
+      <span class="tag">${escapeHTML(LABEL_URGENCIA[urgencia] || urgencia)}</span>
+      <div class="resumo-titulo">Resumo enviado ao médico</div>
+      ${resumo.nome ? `<div class="resumo-linha"><strong>Paciente:</strong> ${escapeHTML(resumo.nome)}</div>` : ''}
+      ${resumo.idade ? `<div class="resumo-linha"><strong>Idade:</strong> ${escapeHTML(resumo.idade)}</div>` : ''}
+      ${resumo.sexo ? `<div class="resumo-linha"><strong>Sexo:</strong> ${escapeHTML(resumo.sexo)}</div>` : ''}
+      <div class="resumo-linha"><strong>Queixa:</strong> ${escapeHTML(resumo.queixa || '-')}</div>
+      <div class="resumo-linha"><strong>Início:</strong> ${escapeHTML(resumo.duracao || '-')}</div>
+      <div class="resumo-linha"><strong>Intensidade relatada:</strong> ${escapeHTML(resumo.intensidade || '-')}</div>
+      ${resumo.sintomas_adicionais ? `<div class="resumo-linha"><strong>Sintomas adicionais:</strong> ${escapeHTML(resumo.sintomas_adicionais)}</div>` : ''}
+      ${resumo.alergias ? `<div class="resumo-linha"><strong>Alergias:</strong> ${escapeHTML(resumo.alergias)}</div>` : ''}
+      ${resumo.medicamentos_relatados ? `<div class="resumo-linha"><strong>Medicamentos relatados:</strong> ${escapeHTML(resumo.medicamentos_relatados)}</div>` : ''}
+      ${resumo.observacoes ? `<div class="resumo-linha"><strong>Observações:</strong> ${escapeHTML(resumo.observacoes)}</div>` : ''}
+      ${json.orientacao_medica ? `<div class="resumo-titulo">Orientação do médico</div><div class="resumo-linha">${escapeHTML(json.orientacao_medica)}</div>` : ''}
+    </div>`;
+  container.appendChild(linha);
+  container.scrollTop = container.scrollHeight;
+
+  adicionarMensagem(json.mensagem, 'bot');
+  document.getElementById('opcoes').innerHTML = '';
+  document.getElementById('campo-texto').style.display = 'none';
+}
+</script>
+
+</body>
+</html>
