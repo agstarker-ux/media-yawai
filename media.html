@@ -467,6 +467,7 @@ const GEMINI_PROXY_URL = location.hostname === 'localhost' ? 'http://localhost:8
 
 const MODELO_NVIDIA = "meta/llama-3.2-11b-vision-instruct";
 const NVIDIA_PROXY_URL = location.hostname === 'localhost' ? 'http://localhost:8888/.netlify/functions/nvidia-proxy' : '/.netlify/functions/nvidia-proxy';
+const GROQ_PROXY_URL = location.hostname === 'localhost' ? 'http://localhost:8888/.netlify/functions/groq-proxy' : '/.netlify/functions/groq-proxy';
 
 const SALVAR_TRIAGEM_URL = location.hostname === 'localhost' ? 'http://localhost:8888/.netlify/functions/salvar-triagem' : '/.netlify/functions/salvar-triagem';
 
@@ -571,36 +572,48 @@ async function chamarIA(instrucaoUsuario, imagemData = null) {
   aguardandoResposta = true;
   mostrarDigitando();
 
+  const tentativas = imagemData
+    ? [
+        { nome: 'gemini', chamar: () => chamarGemini(instrucaoUsuario, imagemData), timeout: 30000 }
+      ]
+    : [
+        { nome: 'groq', chamar: () => chamarGroq(), timeout: 10000 },
+        { nome: 'gemini', chamar: () => chamarGemini(null, null), timeout: 15000 },
+        { nome: 'nvidia', chamar: () => chamarNvidia(), timeout: 30000 }
+      ];
+
+  let ultimoErro = null;
+
   try {
-    let provedor;
-    let resposta;
+    for (const tentativa of tentativas) {
+      try {
+        const resposta = await comTimeout(tentativa.chamar(), tentativa.timeout);
+        const dados = await resposta.json().catch(() => ({}));
 
-    if (imagemData) {
-      provedor = 'gemini';
-      resposta = await chamarGemini(instrucaoUsuario, imagemData);
-      if (!resposta.ok) throw new Error(`Gemini HTTP ${resposta.status}`);
-    } else {
-      provedor = 'nvidia';
-      resposta = await comTimeout(chamarNvidia(), 30000);
+        if (!resposta.ok) {
+          const detalhe = dados.error?.message || dados.message || `HTTP ${resposta.status}`;
+          throw new Error(detalhe);
+        }
+
+        const textoResposta = tentativa.nome === 'gemini'
+          ? dados.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim()
+          : dados.choices?.[0]?.message?.content?.trim();
+
+        if (!textoResposta) throw new Error('A API não retornou uma resposta válida.');
+
+        historico.push({ role: 'assistant', content: textoResposta });
+        const json = JSON.parse(textoResposta.replace(/^```(?:json)?\s*|\s*```$/g, '').trim());
+        removerDigitando();
+        processarResposta(json);
+        return;
+
+      } catch (erroTentativa) {
+        console.warn(`YawAI: falha no provedor ${tentativa.nome}:`, erroTentativa.message);
+        ultimoErro = erroTentativa;
+      }
     }
 
-    const dados = await resposta.json().catch(() => ({}));
-
-    if (!resposta.ok) {
-      const detalhe = dados.error?.message || dados.message || `HTTP ${resposta.status}`;
-      throw new Error(detalhe);
-    }
-
-    const textoResposta = provedor === 'nvidia'
-      ? dados.choices?.[0]?.message?.content?.trim()
-      : dados.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim();
-
-    if (!textoResposta) throw new Error('A API não retornou uma resposta válida.');
-
-    historico.push({ role: 'assistant', content: textoResposta });
-    const json = JSON.parse(textoResposta.replace(/^```(?:json)?\s*|\s*```$/g, '').trim());
-    removerDigitando();
-    processarResposta(json);
+    throw ultimoErro || new Error('Nenhum provedor de IA respondeu.');
 
   } catch (erro) {
     removerDigitando();
@@ -625,6 +638,25 @@ function historicoLimitado() {
   const resto = historico.filter(m => m.role !== 'system');
   const recorte = resto.slice(-LIMITE_TROCAS_HISTORICO);
   return [...sistema, ...recorte];
+}
+
+function chamarGroq() {
+  const mensagens = historicoLimitado().map(m => ({
+    role: m.role,
+    content: Array.isArray(m.content) ? m.content.filter(p => p.type === 'text').map(p => p.text).join(' ') : m.content
+  }));
+
+  return fetch(GROQ_PROXY_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: mensagens,
+      temperature: 0.3
+    })
+  });
 }
 
 function chamarNvidia() {
@@ -656,14 +688,16 @@ function chamarGemini(instrucaoUsuario, imagemData) {
         : [{ text: m.content }]
     }));
 
-  const [tipoImagem, dadosImagem] = imagemData.split(',');
-  contents.push({
-    role: 'user',
-    parts: [
-      { text: instrucaoUsuario || 'Descreva o que é visualmente observável nesta imagem, sem diagnosticar.' },
-      { inlineData: { mimeType: tipoImagem.match(/data:(.*?);/)?.[1] || 'image/jpeg', data: dadosImagem } }
-    ]
-  });
+  if (imagemData) {
+    const [tipoImagem, dadosImagem] = imagemData.split(',');
+    contents.push({
+      role: 'user',
+      parts: [
+        { text: instrucaoUsuario || 'Descreva o que é visualmente observável nesta imagem, sem diagnosticar.' },
+        { inlineData: { mimeType: tipoImagem.match(/data:(.*?);/)?.[1] || 'image/jpeg', data: dadosImagem } }
+      ]
+    });
+  }
 
   return fetch(GEMINI_PROXY_URL, {
     method: 'POST',
