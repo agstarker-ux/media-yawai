@@ -611,20 +611,16 @@ async function chamarIA(instrucaoUsuario, imagemData = null) {
   mostrarDigitando();
 
   try {
-    let provedor = 'gemini';
+    let provedor;
     let resposta;
 
     if (imagemData) {
+      provedor = 'gemini';
       resposta = await chamarGemini(instrucaoUsuario, imagemData);
+      if (!resposta.ok) throw new Error(`Gemini HTTP ${resposta.status}`);
     } else {
-      try {
-        resposta = await comTimeout(chamarGeminiTexto(), 15000);
-        if (!resposta.ok) throw new Error(`Gemini HTTP ${resposta.status}`);
-      } catch (erroGemini) {
-        console.warn('MedIA: Gemini indisponível, usando NVIDIA como reserva.', erroGemini);
-        provedor = 'nvidia';
-        resposta = await comTimeout(chamarNvidia(), 15000);
-      }
+      provedor = 'nvidia';
+      resposta = await comTimeout(chamarNvidia(), 15000);
     }
 
     const dados = await resposta.json().catch(() => ({}));
