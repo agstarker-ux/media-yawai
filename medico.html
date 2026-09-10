@@ -176,7 +176,7 @@
 const SUPABASE_URL = 'https://apbbxirbtmxfavnfhifb.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_tTnmHkLAcgIvogIxfYheiA_hgYVy6tn';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const ORDEM_URGENCIA = { alta: 0, saude_mental: 1, media: 2, baixa: 3 };
 const LABEL_URGENCIA = {
@@ -193,7 +193,7 @@ async function entrar() {
   const senha = document.getElementById('campo-senha').value;
   const erro = document.getElementById('erro-login');
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
   if (error) {
     erro.textContent = error.message;
     erro.style.display = 'block';
@@ -207,12 +207,12 @@ async function entrar() {
 }
 
 async function sair() {
-  await supabase.auth.signOut();
+  await supabaseClient.auth.signOut();
   location.reload();
 }
 
 async function carregarFila() {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('triagens')
     .select('*')
     .neq('status', 'concluido')
@@ -228,7 +228,7 @@ async function carregarFila() {
 }
 
 function assinarAtualizacoes() {
-  canal = supabase
+  canal = supabaseClient
     .channel('triagens-realtime')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'triagens' }, carregarFila)
     .subscribe();
@@ -281,7 +281,7 @@ function renderizarFila(pacientes) {
 }
 
 async function mudarStatus(id, status) {
-  const { error } = await supabase.from('triagens').update({ status }).eq('id', id);
+  const { error } = await supabaseClient.from('triagens').update({ status }).eq('id', id);
   if (error) console.error(error);
 }
 </script>
